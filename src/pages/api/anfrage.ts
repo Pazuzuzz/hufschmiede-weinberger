@@ -72,39 +72,52 @@ export const POST: APIRoute = async ({ request }) => {
   const MAIL_FROM = env("MAIL_FROM");
   const RESEND_API_KEY = env("RESEND_API_KEY");
 
-  // 1) Kalender: Doppelbuchung prüfen + Termin anlegen
-  let htmlLink = "";
-  try {
-    const calendar = getCalendar();
-    const fb = await calendar.freebusy.query({
-      requestBody: { timeMin: startISO, timeMax: endISO, items: [{ id: CALENDAR_ID }] },
-    });
-    const busy = fb.data.calendars?.[CALENDAR_ID]?.busy ?? [];
-    if (busy.length > 0) {
-      return json(409, { ok: false, error: "Dieser Zeitraum ist leider schon vergeben. Bitte wählen Sie einen anderen Termin." });
-    }
-    const ev = await calendar.events.insert({
-      calendarId: CALENDAR_ID,
-      requestBody: {
-        summary: `Hufbeschlag — ${name}`,
-        location: adresse || undefined,
-        description: [
-          telefon && `Telefon: ${telefon}`,
-          email && `E-Mail: ${email}`,
-          notiz && `Notiz: ${notiz}`,
-        ].filter(Boolean).join("\n") || undefined,
-        start: { dateTime: startISO, timeZone: TZ },
-        end: { dateTime: endISO, timeZone: TZ },
-      },
-    });
-    htmlLink = ev.data.htmlLink ?? "";
-  } catch (err) {
-    console.error("[anfrage] Kalenderfehler:", (err as Error)?.message || err);
-    return json(500, { ok: false, error: "Der Termin konnte nicht eingetragen werden. Bitte später erneut versuchen oder telefonisch melden." });
+  // Welche Integrationen sind konfiguriert? (fehlende Secrets dürfen nicht alles scheitern lassen)
+  const calendarConfigured = !!(env("GOOGLE_SERVICE_ACCOUNT_FILE") || env("GOOGLE_SERVICE_ACCOUNT_JSON")) && !!CALENDAR_ID;
+  const mailConfigured = !!(RESEND_API_KEY && MAIL_FROM);
+
+  // Ist überhaupt nichts eingerichtet, kann die Anfrage nirgends landen → sauberer Serverfehler
+  if (!calendarConfigured && !mailConfigured) {
+    console.error("[anfrage] Weder Kalender noch E-Mail konfiguriert.");
+    return json(500, { ok: false, error: "Der Termin kann derzeit nicht verarbeitet werden. Bitte telefonisch melden." });
   }
 
-  // 2) E-Mails via Resend — Fehler hier sollen die bereits erfolgte Buchung nicht scheitern lassen
-  if (RESEND_API_KEY && MAIL_FROM) {
+  // 1) Kalender (optional): Doppelbuchung prüfen + Termin anlegen
+  let htmlLink = "";
+  if (calendarConfigured) {
+    try {
+      const calendar = getCalendar();
+      const fb = await calendar.freebusy.query({
+        requestBody: { timeMin: startISO, timeMax: endISO, items: [{ id: CALENDAR_ID }] },
+      });
+      const busy = fb.data.calendars?.[CALENDAR_ID]?.busy ?? [];
+      if (busy.length > 0) {
+        return json(409, { ok: false, error: "Dieser Zeitraum ist leider schon vergeben. Bitte wählen Sie einen anderen Termin." });
+      }
+      const ev = await calendar.events.insert({
+        calendarId: CALENDAR_ID,
+        requestBody: {
+          summary: `Hufbeschlag — ${name}`,
+          location: adresse || undefined,
+          description: [
+            telefon && `Telefon: ${telefon}`,
+            email && `E-Mail: ${email}`,
+            notiz && `Notiz: ${notiz}`,
+          ].filter(Boolean).join("\n") || undefined,
+          start: { dateTime: startISO, timeZone: TZ },
+          end: { dateTime: endISO, timeZone: TZ },
+        },
+      });
+      htmlLink = ev.data.htmlLink ?? "";
+    } catch (err) {
+      console.error("[anfrage] Kalenderfehler:", (err as Error)?.message || err);
+      return json(500, { ok: false, error: "Der Termin konnte nicht eingetragen werden. Bitte später erneut versuchen oder telefonisch melden." });
+    }
+  }
+
+  // 2) E-Mails via Resend (optional) — Fehler hier sollen eine bereits erfolgte Kalenderbuchung nicht scheitern lassen
+  let mailSent = false;
+  if (mailConfigured) {
     try {
       const resend = new Resend(RESEND_API_KEY);
       const when = fmtHuman(startISO);
@@ -126,13 +139,24 @@ export const POST: APIRoute = async ({ request }) => {
           html: customerHtml({ name, when, adresse }),
         });
       }
+      mailSent = true;
     } catch (err) {
       console.error("[anfrage] Mailfehler:", (err as Error)?.message || err);
-      return json(200, { ok: true, mail: false, message: "Termin eingetragen. Die Bestätigungsmail konnte nicht versendet werden." });
+      return json(200, {
+        ok: true, mail: false,
+        message: calendarConfigured
+          ? "Termin eingetragen. Die Bestätigungsmail konnte nicht versendet werden."
+          : "Ihre Anfrage ist eingegangen. Die Bestätigungsmail konnte nicht versendet werden — wir melden uns.",
+      });
     }
   }
 
-  return json(200, { ok: true, mail: true, message: "Vielen Dank! Ihr Termin ist eingetragen — Sie erhalten eine Bestätigung per E-Mail." });
+  return json(200, {
+    ok: true, mail: mailSent,
+    message: mailSent
+      ? "Vielen Dank! Ihr Termin ist eingetragen — Sie erhalten eine Bestätigung per E-Mail."
+      : "Vielen Dank! Ihr Termin ist eingetragen — wir melden uns zur Bestätigung.",
+  });
 };
 
 function ownerHtml(d: { name: string; telefon: string; email: string; adresse: string; notiz: string; when: string; htmlLink: string }): string {

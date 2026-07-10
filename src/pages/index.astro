@@ -201,97 +201,36 @@ const leistungen = [
   }, { threshold: 0.15 });
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
 
-  // ---------- Terminanfrage lokal speichern (Demo, kein Backend nötig) ----------
-  // Gleiches Datenmodell wie das interne Dashboard (dashboard.astro),
-  // damit eingehende Anfragen dort erscheinen.
-  interface Termin {
-    id: string; name: string; tel: string; mail: string; adr: string; note: string;
-    date: string; time: string; dur: number; start: string | null; end: string | null;
-  }
-  interface Kunde { name: string; tel: string; mail: string; adr: string; visits: number; }
-
-  const KEY_T = "weinberger:termine";
-  const KEY_K = "weinberger:kunden";
-  const MIN_DUR = 90; // Mindestdauer in Minuten
-
-  function load<T>(key: string): T[] {
-    try { const raw = localStorage.getItem(key); return raw ? (JSON.parse(raw) as T[]) : []; }
-    catch { return []; }
-  }
-  function save(key: string, val: unknown) {
-    localStorage.setItem(key, JSON.stringify(val)); // Fehler wird vom Aufrufer gefangen
-  }
-  function localConflict(termine: Termin[], startMs: number, endMs: number) {
-    return termine.some((t) => {
-      if (!t.start) return false;
-      const s = new Date(t.start).getTime();
-      const e = s + (t.dur || MIN_DUR) * 60000;
-      return s < endMs && e > startMs;
-    });
-  }
-
+  // ---------- Terminanfrage an das Backend senden (E-Mail + Kalender) ----------
   const form = document.querySelector<HTMLFormElement>("#anfrage");
   const hint = document.querySelector<HTMLElement>("#form-hint");
-  form?.addEventListener("submit", (e) => {
+  form?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const btn = form.querySelector<HTMLButtonElement>("button[type=submit]");
     const d = new FormData(form);
-    const name = String(d.get("name") ?? "").trim();
-    const tel = String(d.get("telefon") ?? "").trim();
-    const mail = String(d.get("email") ?? "").trim();
-    const adr = String(d.get("adresse") ?? "").trim();
-    const note = String(d.get("notiz") ?? "").trim();
-    const date = String(d.get("date") ?? "").trim();
-    const time = String(d.get("time") ?? "").trim();
-
+    const payload = {
+      name: d.get("name"), telefon: d.get("telefon"), email: d.get("email"),
+      adresse: d.get("adresse"), notiz: d.get("notiz"),
+      date: d.get("date"), time: d.get("time"),
+    };
     if (hint) { hint.textContent = "Wird gesendet …"; hint.classList.remove("is-err"); }
     if (btn) btn.disabled = true;
-
     try {
-      if (!name || !date || !time) {
-        if (hint) { hint.classList.add("is-err"); hint.textContent = "Bitte Name, Datum und Uhrzeit angeben."; }
-        return;
-      }
-
-      // Datum/Uhrzeit als lokale Wandzeit interpretieren
-      const start = new Date(`${date}T${time}:00`);
-      if (isNaN(start.getTime())) {
-        if (hint) { hint.classList.add("is-err"); hint.textContent = "Ungültiges Datum oder Uhrzeit."; }
-        return;
-      }
-      const startISO = start.toISOString();
-      const endISO = new Date(start.getTime() + MIN_DUR * 60000).toISOString();
-
-      const termine = load<Termin>(KEY_T);
-      if (localConflict(termine, start.getTime(), new Date(endISO).getTime())) {
-        if (hint) { hint.classList.add("is-err"); hint.textContent = "Dieser Zeitraum ist leider schon vergeben. Bitte wählen Sie einen anderen Termin."; }
-        return;
-      }
-
-      termine.push({
-        id: Date.now().toString(),
-        name, tel, mail, adr, note,
-        date, time, dur: MIN_DUR,
-        start: startISO, end: endISO,
+      const r = await fetch("/api/anfrage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      save(KEY_T, termine);
-
-      // Kundenkartei pflegen (bestehenden Kunden finden oder neu anlegen)
-      const kunden = load<Kunde>(KEY_K);
-      const found = kunden.find((k) => k.name.toLowerCase() === name.toLowerCase() && k.tel === tel);
-      if (found) {
-        found.visits += 1;
-        found.mail = mail || found.mail;
-        found.adr = adr || found.adr;
-      } else {
-        kunden.push({ name, tel, mail, adr, visits: 1 });
+      const res = await r.json().catch(() => ({}));
+      if (r.ok && res.ok) {
+        form.reset();
+        if (hint) { hint.classList.remove("is-err"); hint.textContent = res.message || "Vielen Dank! Ihr Termin ist eingetragen."; }
+      } else if (hint) {
+        hint.classList.add("is-err");
+        hint.textContent = res.error || "Es ist ein Fehler aufgetreten. Bitte später erneut versuchen.";
       }
-      save(KEY_K, kunden);
-
-      form.reset();
-      if (hint) { hint.classList.remove("is-err"); hint.textContent = "Vielen Dank! Ihr Termin ist eingetragen — wir melden uns zur Bestätigung."; }
     } catch {
-      if (hint) { hint.classList.add("is-err"); hint.textContent = "Der Termin konnte nicht gespeichert werden. Bitte später erneut versuchen oder telefonisch melden."; }
+      if (hint) { hint.classList.add("is-err"); hint.textContent = "Netzwerkfehler — bitte später erneut versuchen."; }
     } finally {
       if (btn) btn.disabled = false;
     }
