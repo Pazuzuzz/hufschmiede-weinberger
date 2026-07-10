@@ -1,0 +1,237 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const heroImages = ["/hero1.jpg", "/hero2.jpg", "/hero3.jpg"];
+
+const leistungen = [
+  { n: "01", t: "Hufbeschlag", d: "Warm- und Kaltbeschlag, individuell an Huf, Gangbild und Einsatz Ihres Pferdes angepasst." },
+  { n: "02", t: "Barhufpflege", d: "Fachgerechtes Ausschneiden und Balancieren für gesunde, tragfähige Barhufe." },
+  { n: "03", t: "Korrekturbeschlag", d: "Orthopädische Beschläge bei Fehlstellungen und Lahmheiten — in Abstimmung mit dem Tierarzt." },
+  { n: "04", t: "Notfallbeschlag", d: "Rasche Hilfe bei Hufabszessen, verlorenen Eisen und akuten Problemen, auch kurzfristig." },
+];
+---
+
+<Layout>
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="hero__slides">
+      {heroImages.map((src, i) => (
+        <div class:list={["hero__slide", { "is-active": i === 0 }]} style={`background-image: url('${src}')`}></div>
+      ))}
+    </div>
+    <div class="hero__overlay"></div>
+    <div class="wrap hero__content">
+      <p class="eyebrow eyebrow--light">Meisterbetrieb · Raum Wiener Neustadt</p>
+      <h1 class="hero__title">Handwerk am Huf,<br /><em>mit Ruhe und Erfahrung.</em></h1>
+      <p class="hero__sub">Meisterhafter Beschlag für Freizeit- und Sportpferde. Sorgfältig, verlässlich, mobil — ich komme zu Ihrem Stall.</p>
+      <a class="btn btn--light" href="#kontakt">Termin anfragen</a>
+    </div>
+    <div class="hero__cue"><span></span></div>
+  </section>
+
+  <!-- LEISTUNGEN -->
+  <section id="leistungen">
+    <div class="wrap">
+      <div class="head reveal">
+        <p class="eyebrow">Leistungen</p>
+        <h2 class="head__title">Was ich für Ihr Pferd leiste </h2>
+      </div>
+      <div class="grid">
+        {leistungen.map((l) => (
+          <div class="card reveal">
+            <span class="card__n">{l.n}</span>
+            <h3>{l.t}</h3>
+            <p>{l.d}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- HANDWERK -->
+  <section id="ueber" class="band">
+    <div class="wrap about reveal">
+      <div>
+        <p class="eyebrow eyebrow--light">Das Handwerk</p>
+        <h2 class="head__title head__title--light">Ein Beruf, der Vertrauen<br />verlangt</h2>
+        <p class="about__text">Seit über 15 Jahren beschlage ich Pferde im Raum Wiener Neustadt — vom Freizeitpferd bis zum Sportpferd. Jeder Huf ist anders, und jedes Pferd verdient Ruhe und Sorgfalt. Ich arbeite eng mit Tierärzten und Besitzern zusammen, damit Ihr Pferd gesund und gerne läuft.</p>
+      </div>
+      <div class="stats">
+        <div><strong>15+</strong><span>Jahre Erfahrung</span></div>
+        <div><strong>30 km</strong><span>Einzugsgebiet</span></div>
+        <div><strong>Mobil</strong><span>Ich komme zu Ihnen</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KONTAKT -->
+  <section id="kontakt">
+    <div class="wrap contact reveal">
+      <div class="contact__info">
+        <p class="eyebrow">Kontakt</p>
+        <h2 class="head__title">Termin<br />anfragen</h2>
+        <p class="contact__lead">Hinterlassen Sie Ihre Daten und eine kurze Notiz — ich melde mich verlässlich zurück.</p>
+        <ul class="contact__list">
+          <li><span>Telefon</span><a href="tel:+43676000000">+43 676 000 000</a></li>
+          <li><span>E-Mail</span><a href="mailto:info@hufschmiede-weinberger.at">info@hufschmiede-weinberger.at</a></li>
+          <li><span>Adresse</span>Musterstraße 1, 2700 Wiener Neustadt</li>
+          <li><span>Zeiten</span>Mo–Fr 7–18 Uhr · Notfälle nach Vereinbarung</li>
+        </ul>
+      </div>
+
+      <form class="form" id="anfrage">
+        <div class="form__row">
+          <label>Name<input type="text" name="name" required placeholder="Vor- und Nachname" /></label>
+          <label>Telefon<input type="tel" name="telefon" required placeholder="+43 …" /></label>
+        </div>
+        <div class="form__row">
+          <label>E-Mail<input type="email" name="email" placeholder="name@beispiel.at" /></label>
+          <label>Adresse / Stall<input type="text" name="adresse" placeholder="Ort, Stall oder Straße" /></label>
+        </div>
+        <div class="form__row">
+          <label>Wunschtermin<input type="date" name="date" required /></label>
+          <label>Uhrzeit<input type="time" name="time" step="900" required /></label>
+        </div>
+        <label>Notiz<textarea name="notiz" rows="4" placeholder="Anzahl Pferde, Anliegen …"></textarea></label>
+        <button type="submit" class="btn">Anfrage senden</button>
+        <p class="form__hint" id="form-hint"></p>
+      </form>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap footer__inner">
+      <img src="/logo-full-transparent.png" alt="Hufschmiede Weinberger" class="footer__logo" />
+      <span>Musterstraße 1, 2700 Wiener Neustadt</span>
+      <span class="footer__note">Demo-Seite · gestaltet von Bernd Brousil</span>
+    </div>
+  </footer>
+</Layout>
+
+<style>
+  .eyebrow { font-weight: 400; letter-spacing: .26em; text-transform: uppercase; font-size: .76rem; color: var(--brass); margin-bottom: 1.2rem; }
+  .eyebrow--light { color: var(--brass-lite); }
+  .head { margin-bottom: 3.5rem; }
+  .head__title { font-size: clamp(2rem, 4.5vw, 3rem); }
+  .head__title--light { color: var(--ivory); }
+
+  .btn { display: inline-block; background: var(--brass); color: var(--ivory); padding: .95rem 2.1rem; border: none; border-radius: 1px; font-family: var(--font-sans); font-weight: 500; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; cursor: pointer; transition: background .3s; }
+  .btn:hover { background: #96773f; }
+  .btn--light { background: transparent; border: 1px solid var(--brass-lite); color: var(--ivory); }
+  .btn--light:hover { background: var(--brass); border-color: var(--brass); }
+
+  .hero { position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden; background: #17120d; padding-top: 6rem; }
+  .hero__slides { position: absolute; inset: 0; }
+  .hero__slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 1.8s ease-in-out; will-change: transform, opacity; }
+  .hero__slide.is-active { opacity: 1; animation: kb 9s ease-out forwards; }
+  @keyframes kb { from { transform: scale(1.16) translate(1.5%, 1%); } to { transform: scale(1) translate(0, 0); } }
+  .hero__overlay { position: absolute; inset: 0; z-index: 1; background: linear-gradient(105deg, rgba(18,14,10,.86) 0%, rgba(18,14,10,.55) 45%, rgba(18,14,10,.2) 100%); }
+  .hero__content { position: relative; z-index: 2; color: var(--ivory); }
+  .hero__title { font-size: clamp(2.8rem, 7vw, 5rem); max-width: 16ch; }
+  .hero__title em { color: var(--brass-lite); font-style: italic; }
+  .hero__sub { font-weight: 300; font-size: clamp(1rem, 2vw, 1.2rem); max-width: 46ch; margin: 1.8rem 0 2.5rem; color: rgba(245,240,231,.85); }
+  .hero__cue { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 2; width: 1px; height: 48px; background: rgba(245,240,231,.35); overflow: hidden; }
+  .hero__cue span { position: absolute; top: -48px; left: 0; width: 1px; height: 48px; background: var(--brass-lite); animation: cue 2.2s ease-in-out infinite; }
+  @keyframes cue { to { top: 48px; } }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0; border-top: 1px solid var(--hair); }
+  .card { padding: 2.5rem 1.8rem; border-bottom: 1px solid var(--hair); border-right: 1px solid var(--hair); transition: background .3s; }
+  .card:hover { background: #efe8db; }
+  .card__n { font-family: var(--font-serif); font-size: 1.1rem; color: var(--brass); letter-spacing: .1em; }
+  .card h3 { font-size: 1.6rem; margin: .8rem 0 .6rem; }
+  .card p { color: var(--muted); font-size: .92rem; }
+
+  .band { background: var(--char); }
+  .about { display: grid; grid-template-columns: 1.5fr 1fr; gap: 4rem; align-items: center; }
+  .about__text { color: rgba(245,240,231,.75); font-weight: 300; margin-top: 1.5rem; }
+  .stats { display: grid; gap: 1.6rem; }
+  .stats div { border-left: 1px solid var(--brass); padding-left: 1.2rem; }
+  .stats strong { display: block; font-family: var(--font-serif); font-size: 2.2rem; color: var(--ivory); font-weight: 500; }
+  .stats span { font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; color: var(--brass-lite); }
+
+  .contact { display: grid; grid-template-columns: 1fr 1.1fr; gap: 5rem; align-items: start; }
+  .contact__lead { color: var(--muted); margin: 1.5rem 0 2.5rem; max-width: 34ch; }
+  .contact__list { list-style: none; display: grid; gap: 1.3rem; }
+  .contact__list li { display: grid; gap: .2rem; padding-bottom: 1.3rem; border-bottom: 1px solid var(--hair); }
+  .contact__list span { font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--brass); }
+  .contact__list a, .contact__list li { font-size: 1.02rem; overflow-wrap: anywhere; }
+
+  .form { display: grid; gap: 1.6rem; }
+  .form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem; }
+  .form label { display: grid; gap: .5rem; font-size: .72rem; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .form input, .form textarea { font-family: var(--font-sans); font-size: 1rem; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--hair); padding: .6rem .1rem; width: 100%; resize: vertical; transition: border-color .3s; }
+  .form input::placeholder, .form textarea::placeholder { color: #b3a996; }
+  .form input:focus, .form textarea:focus { outline: none; border-color: var(--brass); }
+  .form .btn { justify-self: start; margin-top: .8rem; }
+  .form__hint { font-size: .85rem; color: var(--brass); min-height: 1.2em; }
+  .form__hint.is-err { color: #b3261e; }
+
+  footer { background: var(--ink); color: rgba(245,240,231,.65); padding: 3rem 1.5rem; }
+  .footer__inner { display: flex; flex-wrap: wrap; gap: .5rem 2rem; align-items: center; font-size: .85rem; }
+  .footer__brand { font-family: var(--font-serif); font-size: 1.2rem; color: var(--ivory); }
+  .footer__note { margin-left: auto; color: var(--brass-lite); }
+  .footer__logo { height: 88px; width: auto; display: block; }
+
+  @media (max-width: 780px) {
+    .about, .contact { grid-template-columns: 1fr; gap: 2.5rem; }
+    .contact { gap: 3rem; }
+    .form__row { grid-template-columns: 1fr; }
+    .footer__note { margin-left: 0; width: 100%; }
+  }
+  @media (max-width: 480px) {
+    .hero { min-height: 88vh; padding-top: 5rem; }
+    .hero__sub { margin: 1.4rem 0 2rem; }
+    .card { padding: 2rem 1.4rem; }
+  }
+</style>
+
+<script>
+  const slides = Array.from(document.querySelectorAll(".hero__slide"));
+  if (slides.length > 1) {
+    let idx = 0;
+    setInterval(() => {
+      slides[idx].classList.remove("is-active");
+      idx = (idx + 1) % slides.length;
+      slides[idx].classList.add("is-active");
+    }, 7000);
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+
+  const form = document.querySelector<HTMLFormElement>("#anfrage");
+  const hint = document.querySelector<HTMLElement>("#form-hint");
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector<HTMLButtonElement>("button[type=submit]");
+    const d = new FormData(form);
+    const payload = {
+      name: d.get("name"), telefon: d.get("telefon"), email: d.get("email"),
+      adresse: d.get("adresse"), notiz: d.get("notiz"),
+      date: d.get("date"), time: d.get("time"),
+    };
+    if (hint) { hint.textContent = "Wird gesendet …"; hint.classList.remove("is-err"); }
+    if (btn) btn.disabled = true;
+    try {
+      const r = await fetch("/api/anfrage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const res = await r.json().catch(() => ({}));
+      if (r.ok && res.ok) {
+        form.reset();
+        if (hint) { hint.classList.remove("is-err"); hint.textContent = res.message || "Vielen Dank! Ihr Termin ist eingetragen."; }
+      } else if (hint) {
+        hint.classList.add("is-err");
+        hint.textContent = res.error || "Es ist ein Fehler aufgetreten. Bitte später erneut versuchen.";
+      }
+    } catch {
+      if (hint) { hint.classList.add("is-err"); hint.textContent = "Netzwerkfehler — bitte später erneut versuchen."; }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+</script>

@@ -1,0 +1,225 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+<Layout title="Weinberger — Anfragen & Kundenkartei">
+  <section class="dash" style="padding-top: 8rem;">
+    <div class="wrap">
+      <p class="eyebrow">Interner Bereich · Demo</p>
+      <h1 class="dash__title">Anfragen &amp; Kundenkartei</h1>
+      <p class="dash__lead">Interne Übersicht: Termine, die über das Anfrageformular eingehen, werden automatisch in den Google Kalender eingetragen. Hier kannst du zusätzlich manuell Termine notieren und die Kundenkartei pflegen (lokal in diesem Browser).</p>
+
+      <div class="dash__grid">
+        <!-- Neue Anfrage -->
+        <div class="panel">
+          <h2 class="panel__title">Neue Anfrage erfassen</h2>
+          <div class="f">
+            <label>Name<input id="d-name" type="text" placeholder="Vor- und Nachname" /></label>
+            <div class="f__row">
+              <label>Telefon<input id="d-tel" type="tel" placeholder="+43 …" /></label>
+              <label>Datum<input id="d-date" type="date" /></label>
+            </div>
+            <div class="f__row">
+              <label>Uhrzeit<input id="d-time" type="time" step="900" /></label>
+              <label>Dauer (Min., min. 90)<input id="d-dur" type="number" min="90" step="15" value="90" /></label>
+            </div>
+            <label>E-Mail<input id="d-mail" type="email" placeholder="name@beispiel.at" /></label>
+            <label>Adresse / Stall<input id="d-adr" type="text" placeholder="Ort, Stall" /></label>
+            <label>Notiz<textarea id="d-note" rows="2" placeholder="Anzahl Pferde, Anliegen …"></textarea></label>
+            <button class="btn" id="d-add">Termin anlegen</button>
+            <p class="d-hint" id="d-hint"></p>
+          </div>
+        </div>
+
+        <!-- Termine -->
+        <div class="panel">
+          <h2 class="panel__title">Anstehende Termine <span class="count" id="t-count">0</span></h2>
+          <div id="t-list" class="list"></div>
+        </div>
+      </div>
+
+      <!-- Kundenkartei -->
+      <div class="panel panel--wide">
+        <h2 class="panel__title">Kundenkartei <span class="count" id="k-count">0</span></h2>
+        <div id="k-list" class="cards"></div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .eyebrow { font-weight: 400; letter-spacing: .26em; text-transform: uppercase; font-size: .76rem; color: var(--brass); margin-bottom: 1rem; }
+  .dash__title { font-size: clamp(2rem, 4.5vw, 3rem); }
+  .dash__lead { color: var(--muted); max-width: 60ch; margin: 1rem 0 3rem; }
+  .dash__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+  .panel { background: #fff; border: 1px solid var(--hair); border-radius: 3px; padding: 2rem; }
+  .panel--wide { margin-top: 0; }
+  .panel__title { font-size: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: .8rem; }
+  .count { font-family: var(--font-sans); font-size: .8rem; background: var(--brass); color: var(--ivory); border-radius: 20px; padding: .1rem .6rem; }
+
+  .f { display: grid; gap: 1rem; }
+  .f__row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .f label { display: grid; gap: .4rem; font-size: .72rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .f input, .f textarea { font-family: var(--font-sans); font-size: .95rem; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--hair); padding: .5rem .1rem; resize: vertical; }
+  .f input:focus, .f textarea:focus { outline: none; border-color: var(--brass); }
+  .btn { justify-self: start; margin-top: .5rem; background: var(--brass); color: var(--ivory); border: none; padding: .8rem 1.8rem; border-radius: 1px; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; transition: background .3s; }
+  .btn:hover { background: #96773f; }
+
+  .list { display: grid; gap: .8rem; }
+  .t { border-left: 2px solid var(--brass); padding: .8rem 1rem; background: var(--ivory); display: grid; gap: .2rem; }
+  .t__top { display: flex; justify-content: space-between; align-items: baseline; }
+  .t__name { font-family: var(--font-serif); font-size: 1.2rem; }
+  .t__date { font-size: .8rem; color: var(--brass); font-weight: 500; }
+  .t__meta { font-size: .82rem; color: var(--muted); }
+  .t__del { justify-self: end; background: none; border: none; color: var(--muted); cursor: pointer; font-size: .75rem; text-decoration: underline; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+  .k { border: 1px solid var(--hair); border-radius: 3px; padding: 1.2rem; }
+  .k__name { font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: .5rem; }
+  .k__row { font-size: .82rem; color: var(--muted); margin-bottom: .2rem; }
+  .k__visits { margin-top: .6rem; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--brass); }
+
+  .empty { color: var(--muted); font-size: .9rem; font-style: italic; }
+
+  .d-hint { font-size: .82rem; min-height: 1.1em; margin-top: .2rem; color: var(--brass); }
+  .d-hint.is-err { color: #b3261e; }
+
+  @media (max-width: 780px) { .dash__grid, .f__row { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  interface Termin {
+    id: string; name: string; tel: string; mail: string; adr: string; note: string;
+    date: string; time: string; dur: number; start: string | null; end: string | null;
+  }
+  interface Kunde { name: string; tel: string; mail: string; adr: string; visits: number; }
+
+  const KEY_T = "weinberger:termine";
+  const KEY_K = "weinberger:kunden";
+  const MIN_DUR = 90; // Mindestdauer in Minuten
+
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  function load<T>(key: string): T[] {
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) as T[] : []; }
+    catch { return []; }
+  }
+  function save(key: string, val: unknown) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  }
+
+  function fmtDate(d: string) {
+    if (!d) return "Termin offen";
+    return new Date(d).toLocaleDateString("de-AT", { weekday: "short", day: "2-digit", month: "long", year: "numeric" });
+  }
+
+  function setHint(text: string, isErr: boolean) {
+    const el = $("d-hint");
+    if (el) { el.textContent = text; el.classList.toggle("is-err", !!isErr); }
+  }
+
+  // Lokale Doppelbuchungs-Prüfung
+  function localConflict(termine: Termin[], startMs: number, endMs: number, ignoreId?: string) {
+    return termine.some((t) => {
+      if (t.id === ignoreId || !t.start) return false;
+      const s = new Date(t.start).getTime();
+      const e = s + (t.dur || MIN_DUR) * 60000;
+      return s < endMs && e > startMs;
+    });
+  }
+
+  // ---------- Rendering ----------
+  function render() {
+    const termine = load<Termin>(KEY_T);
+    const kunden = load<Kunde>(KEY_K);
+
+    termine.sort((a, b) => (a.start || a.date || "9999").localeCompare(b.start || b.date || "9999"));
+
+    $("t-count").textContent = String(termine.length);
+    $("k-count").textContent = String(kunden.length);
+
+    $("t-list").innerHTML = termine.length ? termine.map((t) => `
+      <div class="t">
+        <div class="t__top"><span class="t__name">${t.name}</span><span class="t__date">${fmtDate(t.date)}${t.time ? " · " + t.time : ""}</span></div>
+        <div class="t__meta">${t.tel || ""}${t.adr ? " · " + t.adr : ""}${t.dur ? " · " + t.dur + " Min." : ""}</div>
+        ${t.note ? `<div class="t__meta">„${t.note}"</div>` : ""}
+        <button class="t__del" data-id="${t.id}">entfernen</button>
+      </div>`).join("") : `<p class="empty">Noch keine Termine.</p>`;
+
+    $("k-list").innerHTML = kunden.length ? kunden.map((k) => `
+      <div class="k">
+        <div class="k__name">${k.name}</div>
+        ${k.tel ? `<div class="k__row">☎ ${k.tel}</div>` : ""}
+        ${k.mail ? `<div class="k__row">✉ ${k.mail}</div>` : ""}
+        ${k.adr ? `<div class="k__row">📍 ${k.adr}</div>` : ""}
+        <div class="k__visits">${k.visits} Termin${k.visits === 1 ? "" : "e"}</div>
+      </div>`).join("") : `<p class="empty">Noch keine Kunden erfasst.</p>`;
+
+    document.querySelectorAll<HTMLElement>(".t__del").forEach((b) =>
+      b.addEventListener("click", () => {
+        const all = load<Termin>(KEY_T);
+        save(KEY_T, all.filter((x) => x.id !== b.dataset.id));
+        render();
+      })
+    );
+  }
+
+  // ---------- Termin manuell notieren (lokal) ----------
+  $("d-add").addEventListener("click", () => {
+    const name = $<HTMLInputElement>("d-name").value.trim();
+    if (!name) { $<HTMLInputElement>("d-name").focus(); return; }
+
+    const date = $<HTMLInputElement>("d-date").value;
+    const time = $<HTMLInputElement>("d-time").value;
+    let dur = parseInt($<HTMLInputElement>("d-dur").value, 10);
+    if (!dur || dur < MIN_DUR) dur = MIN_DUR;
+
+    let startISO = null, endISO = null;
+    if (date && time) {
+      const start = new Date(`${date}T${time}:00`);
+      if (isNaN(start.getTime())) { setHint("Ungültiges Datum/Uhrzeit.", true); return; }
+      startISO = start.toISOString();
+      endISO = new Date(start.getTime() + dur * 60000).toISOString();
+    }
+
+    const entry = {
+      id: Date.now().toString(),
+      name,
+      tel: $<HTMLInputElement>("d-tel").value.trim(),
+      mail: $<HTMLInputElement>("d-mail").value.trim(),
+      adr: $<HTMLInputElement>("d-adr").value.trim(),
+      note: $<HTMLTextAreaElement>("d-note").value.trim(),
+      date, time, dur,
+      start: startISO, end: endISO,
+    };
+
+    const termine = load<Termin>(KEY_T);
+
+    if (startISO && endISO && localConflict(termine, new Date(startISO).getTime(), new Date(endISO).getTime())) {
+      setHint("Dieser Zeitraum ist bereits vergeben.", true);
+      return;
+    }
+
+    termine.push(entry);
+    save(KEY_T, termine);
+
+    // Kundenkartei: bestehenden Kunden finden (Name+Tel) oder neu anlegen
+    const kunden = load<Kunde>(KEY_K);
+    const found = kunden.find((k) => k.name.toLowerCase() === name.toLowerCase() && k.tel === entry.tel);
+    if (found) {
+      found.visits += 1;
+      found.mail = entry.mail || found.mail;
+      found.adr = entry.adr || found.adr;
+    } else {
+      kunden.push({ name, tel: entry.tel, mail: entry.mail, adr: entry.adr, visits: 1 });
+    }
+    save(KEY_K, kunden);
+
+    ["d-name","d-tel","d-mail","d-adr","d-note","d-date","d-time"].forEach((id) => $<HTMLInputElement>(id).value = "");
+    $<HTMLInputElement>("d-dur").value = String(MIN_DUR);
+    setHint(startISO ? "Termin lokal notiert." : "Termin ohne Uhrzeit lokal gespeichert.", false);
+    render();
+  });
+
+  render();
+</script>

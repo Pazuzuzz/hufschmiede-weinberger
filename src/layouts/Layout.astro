@@ -1,0 +1,167 @@
+---
+interface Props { title?: string; description?: string; }
+const {
+  title = "Hufschmiede Weinberger",
+  description = "Meisterhafter Hufbeschlag und Barhufpflege im Raum Wiener Neustadt.",
+} = Astro.props;
+---
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
+    <link rel="icon" type="image/png" href="/favicon-256.png?v=2" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <nav class="nav" id="nav">
+      <div class="nav__inner">
+        <a class="nav__brand" href="#top">
+          <img src="/logo-mark.png" alt="" class="nav__mark" />
+          <span>Weinberger</span>
+        </a>
+        <button class="nav__toggle" id="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="nav-links">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="nav__links" id="nav-links">
+          <a href="#leistungen">Leistungen</a>
+          <a href="#ueber">Handwerk</a>
+          <a href="#kontakt" class="nav__cta">Termin anfragen</a>
+        </div>
+      </div>
+    </nav>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --ink: #16110c;
+    --char: #211a13;
+    --navy: #141b26;
+    --ivory: #f5f0e7;
+    --ivory-2: #ece3d4;
+    --brass: #a98a54;
+    --brass-lite: #c6a874;
+    --muted: #6d6355;
+    --hair: rgba(22, 17, 12, 0.14);
+    --font-serif: "Cormorant Garamond", Georgia, serif;
+    --font-sans: "Montserrat", system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body { font-family: var(--font-sans); color: var(--ink); background: var(--ivory); line-height: 1.7; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  img { max-width: 100%; }
+  h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; line-height: 1.15; letter-spacing: 0.01em; }
+  a { color: inherit; text-decoration: none; }
+  section { padding: 7rem 1.5rem; }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  @media (max-width: 640px) { section { padding: 4.5rem 1.25rem; } }
+
+  /* NAV */
+  .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; transition: background .4s ease, box-shadow .4s ease; }
+  .nav__inner { max-width: 1080px; margin: 0 auto; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+  .nav__brand { display: flex; align-items: center; gap: .7rem; color: var(--ivory); }
+  .nav__mark { height: 40px; width: auto; display: block; }
+  .nav__brand span { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 600; letter-spacing: .02em; }
+  .nav__links { position: relative; display: flex; gap: .6rem; align-items: center; }
+  .nav__links a { position: relative; z-index: 1; font-size: .82rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ivory); opacity: .85; padding: .55rem 1rem; transition: opacity .25s, color .25s; }
+  .nav__links a:hover { opacity: 1; }
+  .nav__cta { opacity: 1 !important; color: var(--brass-lite); }
+  /* gleitender goldener Rahmen, der der Maus zum jeweiligen Link folgt */
+  .nav__hl {
+    position: absolute; top: 0; left: 0; z-index: 0; pointer-events: none;
+    border: 1px solid rgba(198,168,116,.30); border-radius: 2px;
+    transition: left .38s cubic-bezier(.4,0,.2,1), top .38s cubic-bezier(.4,0,.2,1), width .38s cubic-bezier(.4,0,.2,1), height .38s cubic-bezier(.4,0,.2,1);
+  }
+  .nav__hl::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: radial-gradient(90px circle at var(--mx, 50%) var(--my, 50%), var(--brass-lite) 0%, rgba(198,168,116,.35) 35%, transparent 70%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .nav.is-solid { background: var(--navy); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+
+  /* Hamburger (nur mobil sichtbar) */
+  .nav__toggle { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; padding: 0 10px; background: none; border: none; cursor: pointer; }
+  .nav__toggle span { display: block; height: 2px; width: 100%; background: var(--ivory); border-radius: 2px; transition: transform .3s ease, opacity .3s ease; }
+  .nav.is-open .nav__toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav.is-open .nav__toggle span:nth-child(2) { opacity: 0; }
+  .nav.is-open .nav__toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  @media (max-width: 640px) {
+    .nav__toggle { display: flex; }
+    .nav__hl { display: none; }
+    .nav.is-open { background: var(--navy); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+    .nav__links {
+      position: absolute; top: 100%; left: 0; right: 0;
+      flex-direction: column; align-items: stretch; gap: 0;
+      background: var(--navy); padding: .5rem 1.25rem 1.25rem;
+      opacity: 0; transform: translateY(-8px); pointer-events: none;
+      transition: opacity .3s ease, transform .3s ease;
+    }
+    .nav.is-open .nav__links { opacity: 1; transform: none; pointer-events: auto; }
+    .nav__links a { width: 100%; padding: .95rem .2rem; font-size: .9rem; border-bottom: 1px solid rgba(198,168,116,.18); }
+    .nav__cta { border-bottom: none !important; margin-top: .3rem; }
+  }
+
+  /* Scroll-Reveal */
+  .reveal { opacity: 0; transform: translateY(26px); transition: opacity .9s ease, transform .9s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+</style>
+
+<script>
+  const nav = document.getElementById("nav");
+  const onScroll = () => nav?.classList.toggle("is-solid", window.scrollY > 60);
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  // Mobiles Menü
+  const toggle = document.getElementById("nav-toggle");
+  const navLinks = document.getElementById("nav-links");
+  const setMenu = (open: boolean) => {
+    nav?.classList.toggle("is-open", open);
+    toggle?.setAttribute("aria-expanded", String(open));
+    toggle?.setAttribute("aria-label", open ? "Menü schließen" : "Menü öffnen");
+  };
+  toggle?.addEventListener("click", () => setMenu(!nav?.classList.contains("is-open")));
+  navLinks?.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
+  window.addEventListener("resize", () => { if (window.innerWidth > 640) setMenu(false); });
+
+  const links = document.querySelector<HTMLElement>(".nav__links");
+  if (links) {
+    const cta = links.querySelector<HTMLElement>(".nav__cta");
+    const hl = document.createElement("span");
+    hl.className = "nav__hl";
+    links.appendChild(hl);
+
+    let current: HTMLElement | null = cta;
+    const moveTo = (el: HTMLElement | null) => {
+      if (!el) return;
+      hl.style.left = el.offsetLeft + "px";
+      hl.style.top = el.offsetTop + "px";
+      hl.style.width = el.offsetWidth + "px";
+      hl.style.height = el.offsetHeight + "px";
+    };
+
+    links.querySelectorAll<HTMLAnchorElement>("a").forEach((a) =>
+      a.addEventListener("pointerenter", () => { current = a; moveTo(a); })
+    );
+    links.addEventListener("pointerleave", () => { current = cta; moveTo(cta); });
+    links.addEventListener("pointermove", (e) => {
+      const r = hl.getBoundingClientRect();
+      hl.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      hl.style.setProperty("--my", `${e.clientY - r.top}px`);
+    });
+
+    moveTo(cta);
+    window.addEventListener("resize", () => moveTo(current));
+    if (document.fonts?.ready) document.fonts.ready.then(() => moveTo(current));
+  }
+</script>
